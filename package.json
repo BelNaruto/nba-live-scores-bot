@@ -1,0 +1,10 @@
+{
+  "name": "nba-live-scores-bot",
+  "version": "1.0.0",
+  "description": "Discord & Telegram bot: NBA daily previews with predictions, quarter-by-quarter live scores and finals",
+  "main": "src/bot.js",
+  "scripts": { "start": "node src/bot.js", "preview": "node src/bot.js --preview", "finals": "node src/bot.js --finals", "dry": "node src/bot.js --dry-run" },
+  "engines": { "node": ">=18" },
+  "keywords": ["nba", "discord-bot", "telegram-bot", "live-scores", "basketball", "wnba", "ncaa"],
+  "license": "MIT"
+}
