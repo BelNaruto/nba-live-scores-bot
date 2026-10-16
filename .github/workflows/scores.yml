@@ -1,0 +1,41 @@
+# Free hosting on GitHub Actions: daily preview + final scores.
+# (Quarter-by-quarter live updates need the bot running continuously: `npm start` on a server.)
+# Add RAPIDAPI_KEY and DISCORD_WEBHOOK_URL (and/or TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+# in Settings -> Secrets and variables -> Actions.
+name: Basketball scores
+
+on:
+  schedule:
+    - cron: "5 16 * * *"        # daily preview (~noon US Eastern)
+    - cron: "*/30 0-7 * * *"    # finals every 30 min, evening US time
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Post
+        env:
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LEAGUE: ${{ vars.LEAGUE || 'nba' }}
+          TEAMS: ${{ vars.TEAMS }}
+        run: |
+          if [ -z "$RAPIDAPI_KEY" ]; then echo "RAPIDAPI_KEY secret not set - skipping."; exit 0; fi
+          if [ "${{ github.event.schedule }}" = "5 16 * * *" ]; then node src/bot.js --preview; else node src/bot.js --finals; fi
+      - name: Save state
+        run: |
+          if [ -f state.json ] && [ -n "$(git status --porcelain state.json)" ]; then
+            git config user.name "scores-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add state.json && git commit -m "Update bot state" && git push
+          fi
